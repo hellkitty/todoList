@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>TodoList</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+<input type="text" id="todoContent"/>
+<button id="addBtn">등록</button>
+<table>
+    <thead>
+        <tr>
+            <th>할일</th>
+            <th>완료</th>
+            <th>삭제</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+<script type="text/javascript">
+    $(function(){
+        getList();
+    });
+    function getList() {
+        $.ajax({
+            url : "/todo"
+            ,method : "GET"
+            ,success : function(data){
+                console.log(data);
+                var str = "";
+                $.each(data, function(i,v){
+                    var check = v.flag==true ? 'checked' : '';
+                    str+='<tr><td class="todo">'
+                        +v.content
+                        +'</td><td><input type="checkbox" class="flag '+check+'" value="'+v.todo_id+'"/></td>'
+                        +'<td><button class="delBtn" checked="" value="'+v.todo_id+'">delete</button></td></tr>';
+                });
+                $("tbody").empty();
+                $("tbody").append(str);
+                $.each($('.checked'), function() {
+                    $(this).attr("checked",true);
+                });
+            }
+        });
+    }
+    $("#addBtn").click(function(){
+        $.ajax({
+            url : "/todo"
+            ,method : "POST"
+            ,data : {
+                content : $("#todoContent").val()
+            }
+            ,success : function(data) {
+                getList();
+            }
+            ,error : function(err) {
+                alert("add fail");
+            }
+        });
+    });
+    $("table").on("click",".delBtn",function(){
+        console.log(Number($(this).val()));
+        console.log($(this));
+        var id = Number($(this).val());
+        $.ajax({
+            url : "/todo?todo_id="+id
+            ,method : "DELETE"
+            ,success : function(data) {
+                getList();
+            }
+            ,error : function(err) {
+                alert("del fail");
+            }
+        });
+    });
+    $("table").on("change",".flag",function(){
+        var id = Number($(this).val());
+        var content = $(this).parent().parent().find(".todo").html();
+        var flag = $(this).is(":checked")==true?true:false;
+        console.log('id '+id+' content '+content+' flag '+flag);
+        $.ajax({
+            url : "/todo"
+            ,data : {
+                todo_id : id
+                ,content : content
+                ,flag : flag
+            }
+            ,method : "put"
+            ,success : function(data) {
+                //getList();
+            }
+            ,error : function(err) {
+                alert("del fail");
+            }
+        });
+    });
+</script>
+</body>
+</html>
